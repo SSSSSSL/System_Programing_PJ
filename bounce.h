@@ -13,12 +13,12 @@
      #define  BLANK ' '
      #define  DFL_SYMBOL 'o'
      #define  PL_SYMBOL '*'
-     #define  TOP_ROW 5
+     #define  TOP_ROW 1
      #define  BOT_ROW 20
-     #define  LEFT_EDGE 10
-     #define  RIGHT_EDGE 70
-     #define  X_INIT 10                 //  starting col
-     #define  Y_INIT 10                 //  starting row
+     #define  LEFT_EDGE 1
+     #define  RIGHT_EDGE 24
+     #define  X_INIT 18                 //  starting col
+     #define  Y_INIT 1                 //  starting row
      #define  TICKS_PER_SEC 50             //  affects speed
      #define  X_TTM 8
      #define  Y_TTM 8
