@@ -79,10 +79,10 @@ void drawPlayer();
 int set_ticker(int);
 int score = 0;
 int count = 0;
-int done;
+int done = 0;
 
 int makeBlock(int x, int y, char[]);
-void drawFrame(char*);
+//void drawFrame(char*);
 FILE *f;
 
 void drawFrame(char *name);
@@ -93,6 +93,7 @@ int makeBlock(int x, int y, char buffer[]);
 void drawScore(int num);
 void drawLife(int num);
 
+void drawClear();
 
 int  main()
 {	
@@ -134,7 +135,7 @@ void setUp()
 
 	ball.y = Y_INIT;
 	ball.x = X_INIT;
-	ball.y_dir = 1;
+	ball.y_dir = -1;
 	ball.x_dir = 1;
 	strcpy(ball.symbol, BALL_SYMBOL);
 	ball.life = 3;
@@ -143,7 +144,6 @@ void setUp()
 	player.y = BOT_ROW;
 	player.symbol = PL_SYMBOL;
 	drawPlayer();
-	done = 0;
 
 	drawFrame("frame");
 	drawStage("stage3");
@@ -189,16 +189,21 @@ void ballMove(int signum)
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
 
-	count++;
-	move(LINES-1, 0);
+	//count++;
+	//move(LINES-1, 0);
 
 	//게임 종료
 	//if(score == 48 || ball.life == 0 ){
 	//	wrapUp();
 	//}
+	if (score == 48) drawClear();
 
 	drawScore(score);
 	drawLife(ball.life);
+
+	count++;
+	move(LINES-1, 0);
+
 	refresh();
 }
 
@@ -225,7 +230,7 @@ int bounceBall(struct BALL *bp)
 					val = 2;
 				}
 	}
-	if (bp->y < TOP_ROW || bp->y >= BOT_ROW)
+	if (bp->y < TOP_ROW || bp->y > BOT_ROW)
 		bp->y_dir = -(bp->y_dir);
 	if (bp->x <= LEFT_EDGE || bp->x >= RIGHT_EDGE)
 		bp->x_dir = -(bp->x_dir);
@@ -239,8 +244,11 @@ int bounceBall(struct BALL *bp)
 	if(bp->y == BOT_ROW){		
 		if(--(bp->life) <= 0)
 			done = 1;
+
 		bp->x = X_INIT;
 		bp->y = Y_INIT;
+		ball.y_dir = -1;
+		ball.x_dir = 1;
 		sleep(1);
 	}
 	return val;
@@ -335,13 +343,19 @@ void drawFrame(char *name)
 	fclose(f);
 }
 
+void drawClear()
+{
+	mvaddstr(10, 5, "***************");
+	mvaddstr(12, 7, "C L E A R !");
+	mvaddstr(14, 5, "***************");
+}
 
 // 타이틀 그리기
 void drawTitle()
 {
 	mvaddstr(5, 5, "벽돌 깨기 타이틀");
 	mvaddstr(20, 3, "v. 시스템 프로그래밍");
-	mvaddstr(12, 3, "Space로 시작");
+	mvaddstr(12, 7, "Space로 시작");
 }
 
 
