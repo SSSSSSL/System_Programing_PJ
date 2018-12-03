@@ -19,7 +19,7 @@
 #define TOP_ROW 1
 #define BOT_ROW 20
 
-#define BALL_SYMBOL "O"
+#define BALL_SYMBOL "o"
 #define BALL_BLANK " "
 #define  TICKS_PER_SEC 10
 
@@ -184,7 +184,10 @@ void ballMove(int signum)
 	else{
 		mvaddch(yy, xx, BLANK);
 	}
+	
+	if (yy != 0)
 	mvaddstr(yy, xx, BALL_BLANK);
+
 	ball.y += ball.y_dir;
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
@@ -230,7 +233,7 @@ int bounceBall(struct BALL *bp)
 					val = 2;
 				}
 	}
-	if (bp->y < TOP_ROW || bp->y > BOT_ROW)
+	if (bp->y <= TOP_ROW || bp->y > BOT_ROW)
 		bp->y_dir = -(bp->y_dir);
 	if (bp->x <= LEFT_EDGE || bp->x >= RIGHT_EDGE)
 		bp->x_dir = -(bp->x_dir);
