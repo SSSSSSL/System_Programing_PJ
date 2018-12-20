@@ -6,22 +6,29 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
-#include <ncursesw/curses.h>
 #include <stdlib.h>
+#include <ncursesw/curses.h>
 
+#define MAXNUM(a, b) ((a) > (b)) ? (a) : (b)
+#define MINNUM(a, b) ((a) < (b)) ? (a) : (b)
+
+#define WORD(a) a+48
+#define NUMBER(a) a-48
+#define TRUE 1
+#define FALSE 0
 //볼 define=============================================================
 
 #define ball_h
 
-#define X_INIT 6
-#define Y_INIT 11
+#define X_INIT 5
+#define Y_INIT 13
 
-#define TOP_ROW 2
+#define TOP_ROW 1
 #define BOT_ROW 20
 
 #define BALL_SYMBOL "o"
 #define BALL_BLANK " "
-#define  TICKS_PER_SEC 7
+#define  TICKS_PER_SEC 10
 
 //플레이어 define====================================================
 
@@ -36,6 +43,7 @@
 //스크린 define=======================================================
 #define screen_h
 
+#define STR(i, j, m) {move(i, j); addstr(m);}
 
 typedef struct BALL
 {
@@ -62,7 +70,7 @@ struct BLOCK
 struct BALL ball;
 struct PLAYER player;
 struct aiocb kbcbuf;
-struct BLOCK block[50];
+struct BLOCK block[6][30];
 
 // 기초 설정
 void sigOn();
@@ -75,30 +83,37 @@ void ballMove(int signum);
 int bounceBall(struct BALL *bp);
 void movePlayer(char);
 void drawPlayer();
+void printCredit();
+
+int stagenum = 1;
 
 int set_ticker(int);
 int score = 0;
 int count = 0;
 int done = 0;
+int total_score=0;
 
-int makeBlock(int x, int y, char[]);
-//void drawFrame(char*);
+
+//int makeBlock(int x, int y, char[]);
 FILE *f;
 
 void drawFrame(char *name);
+//void drawTitle();
+//void screenTitle();
+void ctrlTitle();
 void drawTitle();
-void screenTitle();
-void drawStage(char *name);
+void drawStage(int stageNum);
 int makeBlock(int x, int y, char buffer[]);
 void drawScore(int num);
 void drawLife(int num);
-void drawClear();
-void drawOver();
 void set_color();
+
+void drawClear();
 
 int  main()
 {	
 	int i=0;
+	
 
 	setlocale(LC_CTYPE, "ko_KR.utf-8");
 	initscr();
@@ -108,17 +123,16 @@ int  main()
 
 	// 타이틀
 	drawFrame("frame");
-	screenTitle();
+	ctrlTitle();
 	clear();
 
 	// 게임 시작
 	setUp();
+
 	signal(SIGALRM, ballMove);
 	while (!done)
 	{
 		pause();
-		if (count > 10 * 50) break;
-		drawFrame("frame");
 	}
 
 	// 마무리
@@ -132,7 +146,6 @@ int  main()
 void setUp()
 {
 	void ballMove(int);
-
 	ball.y = Y_INIT;
 	ball.x = X_INIT;
 	ball.y_dir = -1;
@@ -146,30 +159,39 @@ void setUp()
 	drawPlayer();
 
 	drawFrame("frame");
-	drawStage("stage1");
+	drawStage(stagenum);
 	drawScore(score);
 
 	signal(SIGINT, SIG_IGN);
 	mvaddstr(ball.y, ball.x, ball.symbol);
 	refresh();
-
 	signal(SIGIO, inputKey);
 	setBuffer();
 	aio_read(&kbcbuf);
+	
 	set_ticker(1000 / TICKS_PER_SEC);
 }
 
-// 게임 종료 행동
+// 게임 종료 행동 모음.
 void wrapUp()
 {
 	set_ticker(0);
-        move(LINES-1,0);
-	refresh();
-        sleep(3);
-        clear();
-        endwin();
-        exit(0);
+	endwin();
 }
+void printCredit()
+{
+	static char t_score[5];
+	sprintf(t_score, "%d", total_score);
+
+	STR(5, 5, "시스템 프로그래밍");
+	STR(7, 5, "Total Score : ");
+	mvaddstr(7, 19, t_score);
+	STR(9,4, "2014018036  황정인");
+	STR(11, 4, "2015110533  정원웅");
+	STR(13, 4, "2015113262  이승수");
+	STR(15, 4, "2017113020  박효빈");
+}
+
 
 //공 함수========================================================================
 // 공 움직이기
@@ -184,28 +206,53 @@ void ballMove(int signum)
 	
 	collision = bounceBall(&ball);
 
-	if (collision == 2)
-		mvaddch(yy, xx-1, BLANK);
-	else
+	if (collision == 2){
+		mvaddch(yy, xx-1, BLANK);}
+	else{
 		mvaddch(yy, xx, BLANK);
+	}
 	
+	if (yy != 0)
 	mvaddstr(yy, xx, BALL_BLANK);
+
 	ball.y += ball.y_dir;
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
 
+	
+	if (score > 1) {
+		total_score += score;
+		stagenum++;
+		if(stagenum>5){
+			clear();
+			drawFrame("frame");
+			printCredit();
+			set_ticker(0);
+			refresh();
+			sleep(5);	
+			endwin();
+			exit(0);
+		}
+		set_ticker(0);		
+		score=0;
+		sleep(2);
+		clear();
+		setUp();
+		
+	}
+	if(ball.life <= 0){
+		set_ticker(0);
+		clear();
+		drawFrame("frame");
+		mvaddstr(12, 7, "Game Over");
+		refresh();
+		sleep(1);
+		wrapUp();
+		exit(0);
+	}
+
 	drawScore(score);
 	drawLife(ball.life);
-
-	if (score == 12) {
-                drawClear();
-                wrapUp();
-        }
-
-        if (ball.life == 0) {
-                drawOver();
-                wrapUp();
-        }
 
 	count++;
 	move(LINES-1, 0);
@@ -220,23 +267,23 @@ int bounceBall(struct BALL *bp)
 	int i;
 	int val = 0;
 		
-	for (i = 0; i < 50; i++){
-		if (block[i].nLife)
-			if ( bp->y == block[i].y )
-				if ( ( block[i].x1 == bp->x ) ){
-					block[i].nLife = 0;
+	for (i = 0; i < 30; i++){
+		if (block[stagenum][i].nLife)
+			if ( bp->y == block[stagenum][i].y )
+				if ( ( block[stagenum][i].x1 == bp->x ) ){
+					block[stagenum][i].nLife = 0;
 					score++;
 					bp->y_dir = -(bp->y_dir);
 					val = 1;
 				}
-				else if ( ( block[i].x2 == bp->x ) ){
-					block[i].nLife = 0;
+				else if ( ( block[stagenum][i].x2 == bp->x ) ){
+					block[stagenum][i].nLife = 0;
 					score++;
 					bp->y_dir = -(bp->y_dir);
 					val = 2;
 				}
 	}
-	if (bp->y < TOP_ROW || bp->y > BOT_ROW)
+	if (bp->y <= TOP_ROW || bp->y > BOT_ROW)
 		bp->y_dir = -(bp->y_dir);
 	if (bp->x <= LEFT_EDGE || bp->x >= RIGHT_EDGE)
 		bp->x_dir = -(bp->x_dir);
@@ -250,7 +297,6 @@ int bounceBall(struct BALL *bp)
 	if(bp->y == BOT_ROW){		
 		if(--(bp->life) <= 0)
 			done = 1;
-
 		bp->x = X_INIT;
 		bp->y = Y_INIT;
 		ball.y_dir = -1;
@@ -320,7 +366,6 @@ void movePlayer(char input)
 void drawPlayer()
 {
 	int i;
-
 	for (i = 0; i < 5; i++)
 		mvaddch(player.y, player.x+i, '*');
 }
@@ -357,31 +402,18 @@ void drawClear()
 	mvaddstr(14, 5, "***************");
 }
 
-void drawOver()
-{
-        mvaddstr(10, 5, "****************");
-        mvaddstr(12, 5, "G A M E O V E R");
-        mvaddstr(14, 5, "****************");
-}
-
-
-
 // 타이틀 그리기
+/*
 void drawTitle()
 {
-	set_color();
-	attron(COLOR_PAIR(3));
-	mvaddstr(5, 5, "<<<벽돌 깨기>>>");
-	attroff(COLOR_PAIR(3));
-	attron(COLOR_PAIR(5));
+	mvaddstr(5, 5, "벽돌 깨기 타이틀");
 	mvaddstr(20, 3, "v. 시스템 프로그래밍");
-	attroff(COLOR_PAIR(5));
 	mvaddstr(12, 7, "Space로 시작");
 }
-
+*/
 
 // 타이틀 액션 (메인 코드에 넣는게 더 적절하지만, 일단 여기에 구현 해둠.)
-void screenTitle()
+/*void screenTitle()
 {
 	int key;
 	key = 0;
@@ -395,20 +427,65 @@ void screenTitle()
 		move (LINES-1, 0);
 		key = getch();
 	}
+}*/
+// 타이틀 액션
+void ctrlTitle()
+{
+	void drawTitle();
+	char c = 0;
+
+	drawFrame("frame");
+	drawTitle();
+	mvaddch(12, 16, WORD(stagenum));
+	move (LINES-1, 0);
+	refresh();
+
+	while ((c = getchar()) != ' ')
+	{
+		if (c == 'j') stagenum = MAXNUM(1, stagenum-1);
+		if (c == 'l') stagenum = MINNUM(5, stagenum+1);
+		mvaddch(12, 16, WORD(stagenum));
+		move (LINES-1, 0);
+		refresh();
+	}
 }
 
 
+// 타이틀 그리기
+void drawTitle()
+{
+	set_color();
+	
+	mvaddstr(5, 6, "<<<벽돌 깨기>>>");
+	
+	attron(COLOR_PAIR(5));
+	mvaddstr(10, 6, "스테이지  선택");
+	mvaddstr(20, 3, "v. 시스템 프로그래밍");
+	mvaddstr(12, 6, "◁");
+	mvaddstr(12, 18, "▷");
+	mvaddstr(12, 10, "Stage");
+
+	attroff(COLOR_PAIR(5));
+	attron(COLOR_PAIR(3));
+	mvaddstr(14, 7, "Space로 시작");
+	attroff(COLOR_PAIR(3));
+}
+
 // 스테이지 그리기
-void drawStage(char *name)
+void drawStage(int stageNum)
 {
 	int rowA, colA, rowB, colB, i;
 	char buffer[3];
-	
+	char stage[10];
+
 	set_color();
 
 	attron(COLOR_PAIR(1));
-	
-	f = fopen(name, "r");
+
+	stage[0]=stagenum+'0';
+	stage[1]='\0';
+
+	f = fopen(stage, "r");
 
 	while (!feof(f))
 	{
@@ -425,7 +502,7 @@ void drawStage(char *name)
 		}
 	}
 	fclose(f);
-	
+
 	attroff(COLOR_PAIR(1));
 }
 
@@ -434,16 +511,22 @@ void drawStage(char *name)
 int makeBlock(int x, int y, char buffer[])
 {
 	static int i = 0;
+	static int mem = 1;
 
-	block[i].nLife = 1;
-	block[i].x1 = y;
-	block[i].x2 = y + 1;
-	block[i].y = x;
-	strcpy(block[i].symbol, buffer);
+	if(mem != stagenum){
+		i = 0;
+		mem = stagenum;
+	}
 
-	if (block[i].nLife)
+	block[stagenum][i].nLife = 1;
+	block[stagenum][i].x1 = y;
+	block[stagenum][i].x2 = y + 1;
+	block[stagenum][i].y = x;
+	strcpy(block[stagenum][i].symbol, buffer);
+
+	if (block[stagenum][i].nLife)
 	{
-		mvaddstr(block[i].y, block[i].x1, block[i].symbol);
+		mvaddstr(block[stagenum][i].y, block[stagenum][i].x1, block[stagenum][i].symbol);
 		refresh();
 		i++;
 	}
