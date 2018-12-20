@@ -1,4 +1,3 @@
-
 #include <string.h>
 #include <locale.h>
 #include <aio.h>
@@ -16,12 +15,12 @@
 #define X_INIT 6
 #define Y_INIT 11
 
-#define TOP_ROW 1
+#define TOP_ROW 2
 #define BOT_ROW 20
 
-#define BALL_SYMBOL "o"
+#define BALL_SYMBOL "O"
 #define BALL_BLANK " "
-#define  TICKS_PER_SEC 10
+#define  TICKS_PER_SEC 7
 
 //플레이어 define====================================================
 
@@ -179,15 +178,12 @@ void ballMove(int signum)
 	
 	collision = bounceBall(&ball);
 
-	if (collision == 2){
-		mvaddch(yy, xx-1, BLANK);}
-	else{
+	if (collision == 2)
+		mvaddch(yy, xx-1, BLANK);
+	else
 		mvaddch(yy, xx, BLANK);
-	}
 	
-	if (yy != 0)
 	mvaddstr(yy, xx, BALL_BLANK);
-
 	ball.y += ball.y_dir;
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
@@ -199,7 +195,7 @@ void ballMove(int signum)
 	//if(score == 48 || ball.life == 0 ){
 	//	wrapUp();
 	//}
-	if (score == 48) drawClear();
+	if (score == 33) drawClear();
 
 	drawScore(score);
 	drawLife(ball.life);
@@ -233,7 +229,7 @@ int bounceBall(struct BALL *bp)
 					val = 2;
 				}
 	}
-	if (bp->y <= TOP_ROW || bp->y > BOT_ROW)
+	if (bp->y < TOP_ROW || bp->y > BOT_ROW)
 		bp->y_dir = -(bp->y_dir);
 	if (bp->x <= LEFT_EDGE || bp->x >= RIGHT_EDGE)
 		bp->x_dir = -(bp->x_dir);
