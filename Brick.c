@@ -28,7 +28,6 @@
 
 #define BALL_SYMBOL "o"
 #define BALL_BLANK " "
-#define  TICKS_PER_SEC 10
 
 //플레이어 define====================================================
 
@@ -71,6 +70,8 @@ struct BALL ball;
 struct PLAYER player;
 struct aiocb kbcbuf;
 struct BLOCK block[6][30];
+
+int TICKS_PER_SEC = 10;
 
 // 기초 설정
 void sigOn();
@@ -229,6 +230,7 @@ void ballMove(int signum)
 	if (score > 19) {
 		total_score += score;
 		stagenum++;
+		TICKS_PER_SEC++;
 
 		if(stagenum>5){
 			clear();
@@ -263,6 +265,7 @@ void ballMove(int signum)
 		clear();
 		drawFrame("frame");
 		mvaddstr(12, 7, "Game Over");
+		move(LINES-1,0);
 		refresh();
 		sleep(2);
 		wrapUp();
