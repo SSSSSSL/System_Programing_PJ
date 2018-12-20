@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <ncursesw/curses.h>
+#include <stdlib.h>
 
 //볼 define=============================================================
 
@@ -18,7 +19,7 @@
 #define TOP_ROW 2
 #define BOT_ROW 20
 
-#define BALL_SYMBOL "O"
+#define BALL_SYMBOL "o"
 #define BALL_BLANK " "
 #define  TICKS_PER_SEC 7
 
@@ -91,13 +92,13 @@ void drawStage(char *name);
 int makeBlock(int x, int y, char buffer[]);
 void drawScore(int num);
 void drawLife(int num);
-
 void drawClear();
+void drawOver();
+void set_color();
 
 int  main()
 {	
 	int i=0;
-	
 
 	setlocale(LC_CTYPE, "ko_KR.utf-8");
 	initscr();
@@ -145,7 +146,7 @@ void setUp()
 	drawPlayer();
 
 	drawFrame("frame");
-	drawStage("stage3");
+	drawStage("stage1");
 	drawScore(score);
 
 	signal(SIGINT, SIG_IGN);
@@ -158,11 +159,16 @@ void setUp()
 	set_ticker(1000 / TICKS_PER_SEC);
 }
 
-// 게임 종료 행동 모음.
+// 게임 종료 행동
 void wrapUp()
 {
 	set_ticker(0);
-	endwin();
+        move(LINES-1,0);
+	refresh();
+        sleep(3);
+        clear();
+        endwin();
+        exit(0);
 }
 
 //공 함수========================================================================
@@ -188,17 +194,18 @@ void ballMove(int signum)
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
 
-	//count++;
-	//move(LINES-1, 0);
-
-	//게임 종료
-	//if(score == 48 || ball.life == 0 ){
-	//	wrapUp();
-	//}
-	if (score == 33) drawClear();
-
 	drawScore(score);
 	drawLife(ball.life);
+
+	if (score == 12) {
+                drawClear();
+                wrapUp();
+        }
+
+        if (ball.life == 0) {
+                drawOver();
+                wrapUp();
+        }
 
 	count++;
 	move(LINES-1, 0);
@@ -313,6 +320,7 @@ void movePlayer(char input)
 void drawPlayer()
 {
 	int i;
+
 	for (i = 0; i < 5; i++)
 		mvaddch(player.y, player.x+i, '*');
 }
@@ -349,11 +357,25 @@ void drawClear()
 	mvaddstr(14, 5, "***************");
 }
 
+void drawOver()
+{
+        mvaddstr(10, 5, "****************");
+        mvaddstr(12, 5, "G A M E O V E R");
+        mvaddstr(14, 5, "****************");
+}
+
+
+
 // 타이틀 그리기
 void drawTitle()
 {
-	mvaddstr(5, 5, "벽돌 깨기 타이틀");
+	set_color();
+	attron(COLOR_PAIR(3));
+	mvaddstr(5, 5, "<<<벽돌 깨기>>>");
+	attroff(COLOR_PAIR(3));
+	attron(COLOR_PAIR(5));
 	mvaddstr(20, 3, "v. 시스템 프로그래밍");
+	attroff(COLOR_PAIR(5));
 	mvaddstr(12, 7, "Space로 시작");
 }
 
@@ -381,7 +403,11 @@ void drawStage(char *name)
 {
 	int rowA, colA, rowB, colB, i;
 	char buffer[3];
+	
+	set_color();
 
+	attron(COLOR_PAIR(1));
+	
 	f = fopen(name, "r");
 
 	while (!feof(f))
@@ -399,6 +425,8 @@ void drawStage(char *name)
 		}
 	}
 	fclose(f);
+	
+	attroff(COLOR_PAIR(1));
 }
 
 
@@ -426,16 +454,33 @@ int makeBlock(int x, int y, char buffer[])
 void drawScore(int num)
 {
 	static char s_score[5];
-	sprintf(s_score, "%d", num); 
+	sprintf(s_score, "%d", num);
+        set_color();
+	attron(COLOR_PAIR(2));	
 	mvaddstr(1, 27, "Score:");
+	attroff(COLOR_PAIR(2));
 	mvaddstr(1, 34, s_score);
 }
 
-// 점수 그리기
+// LIFE 그리기
 void drawLife(int num)
 {
 	static char s_life[5];
-	sprintf(s_life, "%d", num); 
+	sprintf(s_life, "%d", num);
+        set_color();
+	attron(COLOR_PAIR(3));	
 	mvaddstr(2, 27, "Life:");
+	attroff(COLOR_PAIR(3));
 	mvaddstr(2, 34, s_life);
+}
+
+// 색깔 넣기
+void set_color()
+{
+	start_color();
+	init_pair(1,COLOR_RED,COLOR_BLACK);
+	init_pair(2,COLOR_GREEN,COLOR_BLACK);
+	init_pair(3,COLOR_BLUE,COLOR_BLACK);
+	init_pair(4,COLOR_WHITE,COLOR_BLACK);
+	init_pair(5,COLOR_YELLOW,COLOR_BLACK);
 }
