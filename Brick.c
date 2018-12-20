@@ -230,7 +230,19 @@ void ballMove(int signum)
 	if (score > 19) {
 		total_score += score;
 		stagenum++;
-		TICKS_PER_SEC++;
+		switch(stagenum){
+			case 1:
+			case 2:
+				TICKS_PER_SEC=10;
+				break;
+			case 3:
+			case 4:
+				TICKS_PER_SEC=12;
+				break;
+			case 5:
+				TICKS_PER_SEC=14;
+				break;
+		}
 
 		if(stagenum>5){
 			clear();
@@ -295,12 +307,14 @@ int bounceBall(struct BALL *bp)
 					block[stagenum][i].nLife = 0;
 					score++;
 					bp->y_dir = -(bp->y_dir);
+					printf("\a");
 					val = 1;
 				}
 				else if ( ( block[stagenum][i].x2 == bp->x ) ){
 					block[stagenum][i].nLife = 0;
 					score++;
 					bp->y_dir = -(bp->y_dir);
+					printf("\a");
 					val = 2;
 				}
 	}
