@@ -79,42 +79,44 @@ void inputKey(int);
 
 void setUp();
 void wrapUp();
+
 void ballMove(int signum);
 int bounceBall(struct BALL *bp);
+
 void movePlayer(char);
 void drawPlayer();
+
 void printCredit();
 
 int stagenum = 1;
 
 int set_ticker(int);
+
 int score = 0;
 int count = 0;
 int done = 0;
 int total_score=0;
 
-
-//int makeBlock(int x, int y, char[]);
 FILE *f;
-
 void drawFrame(char *name);
-//void drawTitle();
-//void screenTitle();
+
 void ctrlTitle();
 void drawTitle();
+
 void drawStage(int stageNum);
 int makeBlock(int x, int y, char buffer[]);
+
 void drawScore(int num);
 void drawLife(int num);
-void set_color();
-
 void drawClear();
+void drawBlank();
+
+void set_color();
 
 int  main()
 {	
 	int i=0;
 	
-
 	setlocale(LC_CTYPE, "ko_KR.utf-8");
 	initscr();
 	noecho();
@@ -142,7 +144,7 @@ int  main()
 }
 
 
-// 게임 시작 행동 모음
+// 게임 초기 설정
 void setUp()
 {
 	void ballMove(int);
@@ -172,12 +174,15 @@ void setUp()
 	set_ticker(1000 / TICKS_PER_SEC);
 }
 
-// 게임 종료 행동 모음.
+
+// 게임 종료 설정
 void wrapUp()
 {
 	set_ticker(0);
 	endwin();
 }
+
+
 void printCredit()
 {
 	static char t_score[5];
@@ -192,14 +197,16 @@ void printCredit()
 	STR(15, 4, "2017113020  박효빈");
 }
 
-
 //공 함수========================================================================
+
 // 공 움직이기
 void ballMove(int signum)
 {
+	char clear[50] = "";
 	int yy, xx;
 	int bounceBall(struct BALL *);
 	int collision = 0;
+	static char n_clear[5];
 
 	yy = ball.y;
 	xx = ball.x;
@@ -218,35 +225,46 @@ void ballMove(int signum)
 	ball.y += ball.y_dir;
 	ball.x += ball.x_dir;
 	mvaddstr(ball.y, ball.x, ball.symbol);
-
 	
-	if (score > 1) {
+	if (score > 19) {
 		total_score += score;
 		stagenum++;
+
 		if(stagenum>5){
 			clear();
 			drawFrame("frame");
 			printCredit();
 			set_ticker(0);
 			refresh();
-			sleep(5);	
+			sleep(3);	
 			endwin();
 			exit(0);
 		}
 		set_ticker(0);		
 		score=0;
+		drawClear();
+		move(LINES-1,0);
+		refresh();
+		sleep(2);
+		drawBlank();
+		sprintf(n_clear, "%d", stagenum);
+		STR(12,9, "Stage");
+		STR(12,15, n_clear);
+		move(LINES-1,0);
+		refresh();
 		sleep(2);
 		clear();
 		setUp();
 		
 	}
+
 	if(ball.life <= 0){
 		set_ticker(0);
 		clear();
 		drawFrame("frame");
 		mvaddstr(12, 7, "Game Over");
 		refresh();
-		sleep(1);
+		sleep(2);
 		wrapUp();
 		exit(0);
 	}
@@ -307,6 +325,7 @@ int bounceBall(struct BALL *bp)
 }
 
 //플레이어 함수===========================================================================
+
 // 시그널 활성화
 void sigOn()
 {
@@ -370,7 +389,9 @@ void drawPlayer()
 		mvaddch(player.y, player.x+i, '*');
 }
 
+
 //스크린 함수=====================================================================
+
 // 틀 그리기
 void drawFrame(char *name)
 {
@@ -395,6 +416,7 @@ void drawFrame(char *name)
 	fclose(f);
 }
 
+
 void drawClear()
 {
 	mvaddstr(10, 5, "***************");
@@ -402,32 +424,13 @@ void drawClear()
 	mvaddstr(14, 5, "***************");
 }
 
-// 타이틀 그리기
-/*
-void drawTitle()
+void drawBlank()
 {
-	mvaddstr(5, 5, "벽돌 깨기 타이틀");
-	mvaddstr(20, 3, "v. 시스템 프로그래밍");
-	mvaddstr(12, 7, "Space로 시작");
+	mvaddstr(10, 5, "               ");
+	mvaddstr(12, 7, "               ");
+	mvaddstr(14, 5, "               ");
 }
-*/
 
-// 타이틀 액션 (메인 코드에 넣는게 더 적절하지만, 일단 여기에 구현 해둠.)
-/*void screenTitle()
-{
-	int key;
-	key = 0;
-
-	while (key != 32)
-	{
-		drawTitle();
-		refresh();
-
-		fflush(stdin);
-		move (LINES-1, 0);
-		key = getch();
-	}
-}*/
 // 타이틀 액션
 void ctrlTitle()
 {
@@ -470,6 +473,7 @@ void drawTitle()
 	mvaddstr(14, 7, "Space로 시작");
 	attroff(COLOR_PAIR(3));
 }
+
 
 // 스테이지 그리기
 void drawStage(int stageNum)
@@ -545,6 +549,7 @@ void drawScore(int num)
 	mvaddstr(1, 34, s_score);
 }
 
+
 // LIFE 그리기
 void drawLife(int num)
 {
@@ -556,6 +561,7 @@ void drawLife(int num)
 	attroff(COLOR_PAIR(3));
 	mvaddstr(2, 34, s_life);
 }
+
 
 // 색깔 넣기
 void set_color()
